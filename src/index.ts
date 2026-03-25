@@ -3,20 +3,20 @@
  */
 
 export {
-  // Core
+  // Core reactivity
   reactive,
   computed,
   computedAsync,
   effect,
   batch,
   isBatchingUpdates,
-  scheduleNotification,
   readonly,
   readonlyObject,
   watch,
   watchMultiple,
   watchProperty,
   // Utilities
+  ref,
   toRaw,
   markRaw,
   isRaw,
@@ -30,6 +30,24 @@ export {
   getDebugInfo,
   logTrackedReactive,
   clearDebugTracking,
+  // Template parser
+  mount,
+  unmount,
+  parse,
+  autoMount,
+  registerState,
+  unregisterState,
+  clearRegistry,
+  buildScope,
+  getStateNames,
+  // Expression utilities
+  evaluate,
+  execute,
+  compileExpression,
+  compileStatement,
+  parseInterpolations,
+  hasInterpolation,
+  clearExpressionCache,
   // DOM bindings
   bindText,
   bindHTML,
@@ -59,7 +77,7 @@ export {
   onKey,
   onEnter,
   onEscape,
-  // Security utilities
+  // Security
   escapeHtmlEntities,
   sanitizeHtmlContent,
   isUrlSafe,
@@ -85,4 +103,8 @@ export type {
   ActionOptions,
   ActionHandler,
   KeyFilter,
+  InterpolationPart,
+  TemplateScope,
+  CompiledExpression,
+  CompiledStatement,
 } from "./core";

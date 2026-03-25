@@ -1,6 +1,6 @@
 {
   "name": "@mohammed_elgohary/reactive",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A lightweight, framework-agnostic reactive state management system for vanilla JavaScript",
   "type": "module",
   "main": "./dist/reactive.js",
@@ -46,11 +46,10 @@
   ],
   "scripts": {
     "build": "tsx scripts/build.ts",
-    "test": "vitest",
-    "test:ui": "vitest --ui",
-    "test:run": "vitest run",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "prepublishOnly": "npm run test:run && npm run build"
+    "prepublishOnly": "npm run test && npm run build"
   },
   "keywords": [
     "reactive",
@@ -79,7 +78,10 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "sideEffects": false,
+  "sideEffects": [
+    "./dist/reactive.iife.min.js",
+    "./dist/reactive.minimal.iife.js"
+  ],
   "devDependencies": {
     "@vitest/coverage-v8": "^1.0.0",
     "@vitest/ui": "^1.0.0",

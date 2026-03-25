@@ -6,7 +6,7 @@ export { reactive } from "./reactive";
 export { computed } from "./computed";
 export { computedAsync } from "./computedAsync";
 export { effect } from "./effect";
-export { batch, isBatchingUpdates, scheduleNotification } from "./batch";
+export { batch, isBatchingUpdates } from "./batch";
 export { readonly, readonlyObject } from "./readonly";
 export { watch, watchMultiple, watchProperty } from "./watch";
 export {
@@ -18,7 +18,6 @@ export {
   isReactive,
   isComputed,
 } from "./utils";
-
 export {
   setDebug,
   isDebugEnabled,
@@ -65,9 +64,38 @@ export {
   onEscape,
 } from "./action";
 
+// Template parser — primary API
+export { mount, unmount, parse, autoMount } from "./parser";
+
+// Registry — for advanced use
+export {
+  registerState,
+  unregisterState,
+  clearRegistry,
+  buildScope,
+  getStateNames,
+} from "./registry";
+
+// Expression utilities — for advanced use
+export {
+  evaluate,
+  execute,
+  compileExpression,
+  compileStatement,
+  parseInterpolations,
+  hasInterpolation,
+  clearExpressionCache,
+} from "./expression";
+
+// Types
 export type { ComputedWithDispose } from "./computed";
 export type { AsyncComputed, AsyncComputedOptions } from "./computedAsync";
-
+export type {
+  InterpolationPart,
+  TemplateScope,
+  CompiledExpression,
+  CompiledStatement,
+} from "../types/parser";
 export type {
   Reactive,
   Computed,

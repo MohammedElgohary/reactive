@@ -29,7 +29,7 @@ state.count++; // triggers effect automatically
 
 #### `reactive(value)`
 
-Creates reactive state. Objects are deeply reactive — all nested properties are tracked automatically. Supports plain objects, arrays, `Map`, `Set`, `Date`, `RegExp`, typed arrays, and `ArrayBuffer`.
+Creates reactive state. Objects are deeply reactive. Supports plain objects, arrays, `Map`, `Set`, `Date`, `RegExp`, typed arrays, and `ArrayBuffer`.
 
 ```typescript
 const state = reactive({ count: 0, name: "John" });
@@ -37,16 +37,16 @@ state.count = 5; // triggers effects
 state.user.age = 30; // nested — also reactive
 ```
 
-Passing a primitive directly works but requires `.value` access, which can feel awkward:
+Prefer wrapping primitives in an object:
 
 ```typescript
-// avoid — the .value wrapper is a JS limitation
-const count = reactive(0);
-count.value = 5;
-
-// prefer — wrap in an object
+// prefer
 const state = reactive({ count: 0 });
 state.count = 5;
+
+// works but requires .value
+const count = reactive(0);
+count.value = 5;
 ```
 
 #### `computed(() => expr)`
@@ -55,132 +55,84 @@ Derived value that updates automatically when dependencies change. Lazy — only
 
 ```typescript
 const doubled = computed(() => state.count * 2);
-console.log(doubled.value); // read via .value
-doubled.subscribe(() => {}); // subscribe to changes
-doubled.dispose(); // stop tracking dependencies
+console.log(doubled.value);
+doubled.dispose(); // stop tracking
 ```
 
 #### `computedAsync(() => Promise<T>, options?)`
 
-Async derived value. Re-runs when reactive dependencies change. Race-condition safe — only the latest run updates state. Reads inside `await` are not tracked; extract them before the first `await`.
+Async derived value. Race-condition safe. Reads inside `await` are not tracked — extract them before the first `await`.
 
 ```typescript
 const user = computedAsync(
   async () => {
-    const id = state.userId; // sync read — tracked as dependency
+    const id = state.userId; // tracked
     return fetch(`/api/users/${id}`).then((r) => r.json());
   },
-  {
-    initialValue: null,
-    onError: (err) => console.error(err), // optional error handler
-  },
+  { initialValue: null, onError: (err) => console.error(err) },
 );
 
-user.value; // resolved data (or initialValue while pending)
-user.loading; // true while running
-user.error; // last thrown error, or null
-
-user.subscribe(() => {
-  /* called on any state change */
-});
-user.dispose(); // stop and clean up
-```
-
-Options:
-
-```typescript
-{
-  initialValue?: T        // value before first resolution (default: undefined)
-  onError?: (err) => void // called when the async function throws
-}
+user.value; // resolved data
+user.loading; // true while pending
+user.error; // last error or null
+user.dispose();
 ```
 
 #### `effect(fn, options?)`
 
-Runs `fn` immediately and re-runs when dependencies change. Returns a stop function. `fn` can return a cleanup function that runs before the next execution and also when the effect is stopped.
+Runs `fn` immediately and re-runs when dependencies change. Returns a stop function.
 
 ```typescript
 const stop = effect(() => {
   console.log(state.count);
-  return () => console.log("cleanup"); // runs before re-run and on stop()
+  return () => console.log("cleanup");
 });
 
-stop(); // stop the effect and run final cleanup
-
-// handle errors instead of logging to console
-effect(() => riskyOperation(), { onError: (err) => reportError(err) });
+stop();
+effect(() => riskyOp(), { onError: (err) => report(err) });
 ```
 
 #### `batch(fn)`
 
-Groups multiple updates into a single notification pass. Returns the value returned by `fn`.
+Groups multiple updates into a single notification pass.
 
 ```typescript
-const result = batch(() => {
+batch(() => {
   state.a = 1;
   state.b = 2;
   state.c = 3;
-  return state.a + state.b; // returned to caller
 }); // one notification instead of three
-```
-
-#### `isBatchingUpdates()`
-
-Returns `true` while inside a `batch()` call.
-
-```typescript
-isBatchingUpdates(); // false
-batch(() => {
-  isBatchingUpdates(); // true
-});
 ```
 
 #### `watch(source, callback, options?)`
 
-Observes a reactive source and calls `callback(newValue, oldValue)` on change. Returns a stop function. The callback can return a cleanup function that runs before the next invocation.
+Observes a reactive source and calls `callback(newValue, oldValue)` on change.
 
 ```typescript
-// Getter function
 const stop = watch(
   () => state.count,
-  (newVal, oldVal) => {
-    console.log(newVal, oldVal);
-    return () => console.log("cleanup before next call");
-  },
-  { immediate: true }, // run callback immediately on setup
+  (newVal, oldVal) => console.log(newVal, oldVal),
+  { immediate: true },
 );
 
-// Array of sources (unified overload — same as watchMultiple)
-watch([() => state.a, () => state.b], ([newA, newB], [oldA, oldB]) =>
+// Multiple sources
+watch([() => state.a, () => state.b], ([newA, newB]) =>
   console.log(newA, newB),
 );
 
-// Property shorthand (unified overload — same as watchProperty)
-watch(state, "count", (newVal, oldVal) => console.log(newVal));
-```
-
-Options:
-
-```typescript
-{
-  immediate?: boolean // run callback immediately with current value on setup
-  deep?: boolean      // reserved for future use — currently has no effect
-}
+// Property shorthand
+watch(state, "count", (newVal) => console.log(newVal));
 ```
 
 #### `watchMultiple(sources, callback, options?)`
 
-Watch multiple sources at once. Callback can return a cleanup function.
-
 ```typescript
-watchMultiple([() => state.a, () => state.b], ([newA, newB], [oldA, oldB]) =>
+watchMultiple([() => state.a, () => state.b], ([newA, newB]) =>
   console.log(newA, newB),
 );
 ```
 
 #### `watchProperty(obj, key, callback, options?)`
-
-Watch a single property on a reactive object. Callback can return a cleanup function.
 
 ```typescript
 watchProperty(state, "count", (newVal, oldVal) => console.log(newVal));
@@ -190,88 +142,70 @@ watchProperty(state, "count", (newVal, oldVal) => console.log(newVal));
 
 ### DOM Binding
 
-All binding functions return a cleanup/stop function.
+All binding functions return a cleanup function.
 
 ```typescript
-// Text content (auto-escapes, safe)
 bindText("#el", () => state.name);
 
-// HTML content (sanitized by default — removes scripts, event handlers, etc.)
 bindHTML("#el", () => state.html);
-bindHTML("#el", () => trustedHtml, { trusted: true }); // skip sanitization
+bindHTML("#el", () => trustedHtml, { trusted: true });
 
-// Attribute (blocks dangerous attrs like onclick, formaction)
 bindAttr("#el", "disabled", () => state.count === 0);
-bindAttr("#el", "href", () => state.url); // auto-validates URLs
-// escape hatches (use with caution)
+bindAttr("#el", "href", () => state.url);
 bindAttr("#el", "href", () => state.url, { allowDangerousUrls: true });
-bindAttr("#el", "formaction", () => state.url, {
-  allowDangerousAttributes: true,
-});
 
-// CSS class toggle
 bindClass("#el", "active", () => state.isActive);
 
-// Single inline style
 bindStyle("#el", "color", () => (state.isError ? "red" : "black"));
 
-// Multiple styles at once — record of getter functions
 bindStyles("#el", {
   "background-color": () => state.bg,
   "font-size": () => `${state.size}px`,
 });
-// or pass a reactive object directly (values are read reactively)
-bindStyles("#el", state.styles);
+bindStyles("#el", state.styles); // reactive object
 
-// Property binding (blocks innerHTML, outerHTML, srcdoc)
 bindProp("#el", "scrollTop", () => state.scroll);
 
-// Two-way input binding — primitive reactive
+// Two-way input
 const name = reactive("");
-bindInput("#input", name); // works with text, checkbox, radio, select, textarea, file,
-// date, datetime-local, month, time, week, number, range
+bindInput("#input", name);
 
-// Two-way input binding — object property (no .value wrapper needed)
 const state = reactive({ name: "", age: 0 });
 bindInput("#name-input", state, "name");
 bindInput("#age-input", state, "age");
 
-// Multiple bindings at once
 bindMultiple([
   { selector: "#title", type: "text", target: "", source: () => state.title },
   { selector: "#box", type: "class", target: "active", source: () => state.on },
 ]);
 
-// Render HTML template (sanitized by default)
 render("#list", () => items.map((i) => `<li>${i}</li>`).join(""));
 render("#app", () => template(), { trusted: true });
 
-// Unified bind — auto-detects type
-bind("#el", () => state.text); // text or HTML (auto-detected by content)
-bind("#el", "class:active", () => state.on); // class
-bind("#el", "style:color", () => state.color); // style
-bind("#el", "styles", state.styles); // multiple styles
-bind("#el", "prop:scrollTop", () => state.scroll); // property
-bind("#el", "href", () => state.url); // attribute
+// Unified bind
+bind("#el", () => state.text);
+bind("#el", "class:active", () => state.on);
+bind("#el", "style:color", () => state.color);
+bind("#el", "styles", state.styles);
+bind("#el", "prop:scrollTop", () => state.scroll);
+bind("#el", "href", () => state.url);
 ```
 
 ---
 
 ### Event Binding
 
-All event functions return a cleanup/stop function.
+All event functions return a cleanup function. Selectors accept `string`, `Element`, `Document`, or `Window`.
 
 ```typescript
-// Generic — full TypeScript autocomplete for event types
 bindAction("#btn", "click", (e) => console.log(e));
 bindAction("#form", "submit", handler, { preventDefault: true });
 
-// Shorthands
 onClick("#btn", (e) => {});
 onDblClick("#btn", (e) => {});
 onInput("#input", (e) => {});
 onChange("#select", (e) => {});
-onSubmit("#form", (e) => {}); // preventDefault is on by default
+onSubmit("#form", (e) => {}); // preventDefault on by default
 onKeyDown("#el", (e) => {});
 onKeyUp("#el", (e) => {});
 onFocus("#el", (e) => {});
@@ -279,6 +213,12 @@ onBlur("#el", (e) => {});
 onMouseEnter("#el", (e) => {});
 onMouseLeave("#el", (e) => {});
 onScroll("#el", (e) => {}); // passive by default
+
+// Event delegation on document
+onClick(document, (e) => {
+  const btn = e.target.closest(".my-btn");
+  if (btn) handle(btn);
+});
 
 // Key helpers
 onKey("#input", "Enter", () => submit());
@@ -296,12 +236,12 @@ onEscape("#modal", () => close());
 
 ```typescript
 {
-  preventDefault?: boolean              // call e.preventDefault() automatically
-  stopPropagation?: boolean             // call e.stopPropagation() automatically
-  stopImmediatePropagation?: boolean    // call e.stopImmediatePropagation() automatically
-  capture?: boolean                     // use capture phase instead of bubble
-  once?: boolean                        // remove listener after first invocation
-  passive?: boolean                     // hint that handler won't call preventDefault (improves scroll perf)
+  preventDefault?: boolean
+  stopPropagation?: boolean
+  stopImmediatePropagation?: boolean
+  capture?: boolean
+  once?: boolean
+  passive?: boolean
 }
 ```
 
@@ -311,16 +251,15 @@ onEscape("#modal", () => close());
 
 ```typescript
 ref(value); // alias for reactive()
-readonly(source); // read-only wrapper around a reactive/computed — warns on write
+readonly(source); // read-only wrapper — warns on write
 readonlyObject(obj); // Proxy that throws on write/delete
-markRaw(obj); // exclude object from reactivity
-isRaw(obj); // check if object is marked raw
-toRaw(reactive); // extract raw value from a primitive reactive wrapper
-shallowReactive(obj); // only top-level properties are reactive (nested objects are raw)
-isReactive(value); // true if value is a reactive primitive wrapper
-isComputed(value); // true if value is a computed
-isBatchingUpdates(); // true while inside a batch() call
-scheduleNotification(cb); // schedule a notification callback, respects batching
+markRaw(obj); // exclude from reactivity
+isRaw(obj); // check if marked raw
+toRaw(reactive); // extract raw value from primitive reactive
+shallowReactive(obj); // only top-level properties reactive
+isReactive(value); // true if reactive primitive wrapper
+isComputed(value); // true if computed
+isBatchingUpdates(); // true inside batch()
 ```
 
 ---
@@ -328,20 +267,23 @@ scheduleNotification(cb); // schedule a notification callback, respects batching
 ### Debug
 
 ```typescript
-setDebug(true); // enable debug mode
-isDebugEnabled(); // check if debug is on
-trackReactive(state); // track a reactive for debugging
-trackReactive(myComputed, "computed"); // track a computed
-getDebugInfo(state); // get change history for a tracked reactive
-logTrackedReactive(); // print all tracked reactives to console
-clearDebugTracking(); // clear all tracked reactives
+setDebug(true);
+isDebugEnabled();
+trackReactive(state);
+trackReactive(myComputed, "computed");
+getDebugInfo(state);
+logTrackedReactive();
+clearDebugTracking();
 ```
 
-           // returns false for javascript:, vbscript:, data:text/html
+### Security
 
+```typescript
+escapeHtmlEntities(str);
+sanitizeHtmlContent(html);
+isUrlSafe(url);
 configureReactiveSecurity({ logWarnings, throwOnViolation });
-
-````
+```
 
 ---
 
@@ -350,24 +292,87 @@ configureReactiveSecurity({ logWarnings, throwOnViolation });
 ```html
 <script src="https://unpkg.com/@mohammed_elgohary/reactive/dist/reactive.iife.min.js"></script>
 <script>
-  const { reactive, computed, effect, bindText, onClick } = Reactive;
+  const { reactive, mount, bindText, onClick } = Reactive;
 
   const state = reactive({ count: 0 });
   bindText("#counter", () => state.count);
   onClick("#btn", () => state.count++);
 </script>
-````
+```
 
-## License
-
-MIT
+The library automatically injects `body { opacity: 0 }` on load and adds `body.r-ready { opacity: 1 }` after `mount()` completes — preventing flash of unresolved template expressions.
 
 ---
 
-### Security Utilities
+## Template Parser
 
-```typescript
-escapeHtmlEntities(str); // convert <, >, &, " etc. to HTML entities
-sanitizeHtmlContent(html); // remove scripts/event handlers, keep safe HTML
-isUrlSafe(url);
+Write reactive UIs directly in HTML. No manual wiring.
+
+```html
+<script src="reactive.iife.min.js"></script>
+
+<body>
+  <p>{{ counter.count }}</p>
+  <button @click="counter.count++">+</button>
+  <input :model="user.name" />
+  <p :show="counter.count > 0">Positive!</p>
+
+  <script>
+    const { reactive, mount } = Reactive;
+    const counter = reactive({ count: 0 });
+    const user = reactive({ name: "Ali" });
+    mount({ counter, user });
+  </script>
+</body>
 ```
+
+### Syntax
+
+| Syntax               | Description                               |
+| -------------------- | ----------------------------------------- |
+| `{{ expr }}`         | Text interpolation                        |
+| `:attr="expr"`       | Attribute binding                         |
+| `:class="expr"`      | Class binding (string or `{ cls: bool }`) |
+| `:style="expr"`      | Style binding (object)                    |
+| `:show="expr"`       | Toggle visibility                         |
+| `:html="expr"`       | Inner HTML (sanitized)                    |
+| `:model="state.key"` | Two-way input binding                     |
+| `@event="statement"` | Event handler (`$event` available)        |
+
+### mount({ name: state, ... })
+
+Registers states and parses the DOM. Only nodes referencing a changed state re-evaluate.
+
+```javascript
+const counter = reactive({ count: 0 });
+const user = reactive({ name: "Ali" });
+mount({ counter, user });
+```
+
+### parse(root, scope)
+
+Low-level — parse a specific subtree with an explicit scope.
+
+```javascript
+const stop = parse(document.querySelector("#app"), { counter, user });
+stop(); // tear down bindings
+```
+
+### unmount()
+
+Tears down all auto-mounted bindings.
+
+---
+
+## Bundle Sizes
+
+| Build                       | Size (min+gzip) | Use case               |
+| --------------------------- | --------------- | ---------------------- |
+| `reactive.iife.min.js`      | ~7.1KB          | Browser, full features |
+| `reactive.minimal.iife.js`  | ~5.2KB          | Browser, core only     |
+| `reactive.min.js` (ESM)     | ~8.8KB          | Bundler, full features |
+| `reactive.minimal.js` (ESM) | ~6.5KB          | Bundler, core only     |
+
+---
+
+MIT

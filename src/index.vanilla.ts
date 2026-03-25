@@ -1,10 +1,16 @@
 /**
- * Reactive Framework - Vanilla JS Only
- *
- * This version excludes React hooks for use in vanilla JavaScript/browser environments
+ * Reactive — Vanilla JS / Browser build
  */
 
-// Core reactive primitives
+// Inject flash-prevention CSS as soon as the script loads.
+// body starts hidden; mount() adds r-ready to reveal it.
+if (typeof document !== "undefined") {
+  const s = document.createElement("style");
+  s.textContent =
+    "body{opacity:0}body.r-ready{opacity:1;transition:opacity .1s}";
+  document.head.appendChild(s);
+}
+
 export {
   reactive,
   computed,
@@ -12,18 +18,11 @@ export {
   effect,
   batch,
   isBatchingUpdates,
-  scheduleNotification,
   readonly,
   readonlyObject,
   watch,
   watchMultiple,
   watchProperty,
-  setDebug,
-  isDebugEnabled,
-  trackReactive,
-  getDebugInfo,
-  logTrackedReactive,
-  clearDebugTracking,
   ref,
   toRaw,
   markRaw,
@@ -31,6 +30,30 @@ export {
   shallowReactive,
   isReactive,
   isComputed,
+  setDebug,
+  isDebugEnabled,
+  trackReactive,
+  getDebugInfo,
+  logTrackedReactive,
+  clearDebugTracking,
+  // Template parser
+  mount,
+  unmount,
+  parse,
+  autoMount,
+  registerState,
+  unregisterState,
+  clearRegistry,
+  buildScope,
+  getStateNames,
+  evaluate,
+  execute,
+  compileExpression,
+  compileStatement,
+  parseInterpolations,
+  hasInterpolation,
+  clearExpressionCache,
+  // DOM bindings
   bindText,
   bindHTML,
   bindAttr,
@@ -39,13 +62,14 @@ export {
   bindStyle,
   bindStyles,
   bindInput,
-  render,
   bindMultiple,
   bind,
+  render,
   escapeHtmlEntities,
   sanitizeHtmlContent,
   isUrlSafe,
   configureReactiveSecurity,
+  // Events
   bindAction,
   onClick,
   onDblClick,
@@ -64,7 +88,6 @@ export {
   onEscape,
 } from "./core";
 
-// Types
 export type {
   Reactive,
   Computed,

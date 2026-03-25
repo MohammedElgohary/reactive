@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Parser · Scoped Updates · Reactive</title>
+    <link rel="stylesheet" href="../styles.css" />
+    <script src="../dist/reactive.iife.min.js"></script>
+    <style>
+      .scope-box {
+        border: 2px solid var(--border);
+        border-radius: var(--r-lg);
+        padding: 1.25rem;
+        position: relative;
+      }
+      .scope-box.highlight {
+        border-color: var(--primary);
+      }
+      .scope-label {
+        position: absolute;
+        top: -0.65rem;
+        left: 0.75rem;
+        background: var(--surface);
+        padding: 0 0.4rem;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--muted);
+      }
+      .scope-label.primary {
+        color: var(--primary);
+      }
+      .flash {
+        animation: flash 0.35s ease;
+      }
+      @keyframes flash {
+        0% {
+          background: var(--primary-l, #e0e7ff);
+        }
+        100% {
+          background: transparent;
+        }
+      }
+      .update-log {
+        font-size: 0.78rem;
+        color: var(--muted);
+        max-height: 120px;
+        overflow-y: auto;
+        font-family: monospace;
+      }
+      .log-entry {
+        padding: 0.15rem 0;
+        border-bottom: 1px solid var(--border);
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="topbar">
+      <a href="../index.html" class="topbar-brand">⚡ Reactive</a>
+      <div class="topbar-links">
+        <a href="index.html">Overview</a>
+        <a href="counter.html">Counter</a>
+        <a href="form.html">Form</a>
+        <a href="list.html">List</a>
+        <a href="scoped.html" class="active">Scoped</a>
+      </div>
+    </nav>
+
+    <main class="page">
+      <header class="page-header">
+        <h1>Scoped Updates</h1>
+        <p class="page-subtitle">
+          Two independent states. The parser stamps <code>data-scope</code>
+          automatically — only nodes that reference a changed state re-evaluate.
+          Watch the highlight to see exactly which region updates.
+        </p>
+      </header>
+
+      <div
+        style="
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1.5rem;
+          margin-bottom: 1.5rem;
+        "
+      >
+        <!-- Counter state -->
+        <div class="scope-box" id="counter-box">
+          <span class="scope-label primary">data-scope="counter"</span>
+
+          <div style="text-align: center; padding: 1rem 0">
+            <div style="font-size: 3rem; font-weight: 800">
+              {{ counter.count }}
+            </div>
+            <div
+              style="
+                color: var(--muted);
+                font-size: 0.85rem;
+                margin-top: 0.25rem;
+              "
+            >
+              {{ counter.count % 2 === 0 ? 'even' : 'odd' }} &nbsp;·&nbsp; {{
+              counter.count >= 0 ? '+' : '' }}{{ counter.count }}
+            </div>
+          </div>
+
+          <div class="btn-group" style="justify-content: center">
+            <button class="btn btn-primary" @click="counter.count++">+</button>
+            <button class="btn btn-secondary" @click="counter.count--">
+              −
+            </button>
+            <button class="btn btn-danger" @click="counter.count = 0">0</button>
+          </div>
+
+          <div class="output-box" style="margin-top: 1rem">
+            <div class="stat-row">
+              <span class="stat-label">count</span>
+              <span>{{ counter.count }}</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">doubled</span>
+              <span>{{ counter.count * 2 }}</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">positive</span>
+              <span>{{ counter.count > 0 ? 'yes' : 'no' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- User state -->
+        <div class="scope-box" id="user-box">
+          <span class="scope-label primary">data-scope="user"</span>
+
+          <div style="text-align: center; padding: 1rem 0">
+            <div style="font-size: 2rem; font-weight: 800">{{ user.name }}</div>
+            <div
+              style="
+                color: var(--muted);
+                font-size: 0.85rem;
+                margin-top: 0.25rem;
+              "
+            >
+              {{ user.role }} · age {{ user.age }}
+            </div>
+          </div>
+
+          <div
+            style="
+              display: flex;
+              flex-direction: column;
+              gap: 0.5rem;
+              margin-bottom: 0.75rem;
+            "
+          >
+            <input
+              type="text"
+              :model="user.name"
+              placeholder="Name"
+              style="
+                padding: 0.45rem 0.65rem;
+                border: 1px solid var(--border);
+                border-radius: var(--r-md);
+                background: var(--surface-2);
+                color: var(--text);
+                font-size: 0.88rem;
+              "
+            />
+            <input
+              type="number"
+              :model="user.age"
+              placeholder="Age"
+              style="
+                padding: 0.45rem 0.65rem;
+                border: 1px solid var(--border);
+                border-radius: var(--r-md);
+                background: var(--surface-2);
+                color: var(--text);
+                font-size: 0.88rem;
+              "
+            />
+          </div>
+
+          <div class="output-box">
+            <div class="stat-row">
+              <span class="stat-label">name</span>
+              <span>{{ user.name }}</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">age</span>
+              <span>{{ user.age }}</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">role</span>
+              <span>{{ user.role }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cross-state node — updates when EITHER changes -->
+      <div class="card">
+        <div class="scope-box" id="both-box">
+          <span class="scope-label primary">data-scope="counter user"</span>
+          <div class="section-title" style="margin-bottom: 0.5rem">
+            Cross-state node
+          </div>
+          <p style="font-size: 0.9rem">
+            <strong>{{ user.name }}</strong> has clicked
+            <strong>{{ counter.count }}</strong> times. {{ counter.count === 0 ?
+            "Haven't started yet." : counter.count > 10 ? 'Very active!' :
+            'Getting started.' }}
+          </p>
+          <p style="font-size: 0.82rem; color: var(--muted)">
+            This node references both <code>counter</code> and
+            <code>user</code> — it re-evaluates when either state changes.
+          </p>
+        </div>
+      </div>
+
+      <!-- Update log -->
+      <div class="card" style="margin-top: 1.5rem">
+        <div class="section-title" style="margin-bottom: 0.5rem">
+          Update log
+        </div>
+        <p
+          style="
+            font-size: 0.82rem;
+            color: var(--muted);
+            margin-bottom: 0.75rem;
+          "
+        >
+          Showing which state triggered each DOM update.
+        </p>
+        <div class="update-log" id="log">
+          <div class="log-entry" style="color: var(--muted)">
+            — waiting for changes —
+          </div>
+        </div>
+        <button
+          class="btn btn-secondary"
+          style="margin-top: 0.75rem"
+          onclick="document.getElementById('log').innerHTML = ''"
+        >
+          Clear log
+        </button>
+      </div>
+    </main>
+
+    <script>
+      const { reactive, effect, mount } = Reactive;
+      const counter = reactive({ count: 0 });
+      const user = reactive({
+        name: "Mohammed Ali",
+        age: 25,
+        role: "Developer",
+      });
+      mount({ counter, user });
+
+      function logUpdate(stateName, detail) {
+        const log = document.getElementById("log");
+        if (!log) return;
+        const entry = document.createElement("div");
+        entry.className = "log-entry";
+        entry.textContent = `[${new Date().toLocaleTimeString()}] ${stateName} changed — ${detail}`;
+        log.prepend(entry);
+        const box = document.getElementById(stateName + "-box");
+        if (box) {
+          box.classList.remove("flash");
+          void box.offsetWidth;
+          box.classList.add("flash");
+        }
+      }
+
+      effect(() => {
+        const c = counter.count;
+        logUpdate("counter", `count = ${c}`);
+      });
+      effect(() => {
+        const n = user.name;
+        const a = user.age;
+        logUpdate("user", `name = "${n}", age = ${a}`);
+      });
+    </script>
+  </body>
+</html>

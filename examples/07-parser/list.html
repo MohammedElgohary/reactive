@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Parser · List · Reactive</title>
+    <link rel="stylesheet" href="../styles.css" />
+    <script src="../dist/reactive.iife.min.js"></script>
+    <style>
+      .todo-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.6rem 0.75rem;
+        border-radius: var(--r-md);
+        border: 1px solid var(--border);
+        margin-bottom: 0.5rem;
+        background: var(--surface);
+      }
+      .todo-item.done {
+        opacity: 0.5;
+      }
+      .todo-item.done .todo-text {
+        text-decoration: line-through;
+      }
+      .todo-text {
+        flex: 1;
+        font-size: 0.9rem;
+      }
+      .todo-tag {
+        font-size: 0.7rem;
+        padding: 0.15rem 0.45rem;
+        border-radius: 4px;
+        font-weight: 600;
+      }
+      .tag-work {
+        background: #dbeafe;
+        color: #1d4ed8;
+      }
+      .tag-personal {
+        background: #fce7f3;
+        color: #be185d;
+      }
+      .tag-urgent {
+        background: #fee2e2;
+        color: #dc2626;
+      }
+      .filter-btn {
+        padding: 0.35rem 0.85rem;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        border: 1px solid var(--border);
+        background: var(--surface-2);
+        cursor: pointer;
+      }
+      .filter-btn.active {
+        background: var(--primary);
+        color: #fff;
+        border-color: var(--primary);
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="topbar">
+      <a href="../index.html" class="topbar-brand">⚡ Reactive</a>
+      <div class="topbar-links">
+        <a href="index.html">Overview</a>
+        <a href="counter.html">Counter</a>
+        <a href="form.html">Form</a>
+        <a href="list.html" class="active">List</a>
+        <a href="scoped.html">Scoped</a>
+      </div>
+    </nav>
+
+    <main class="page">
+      <header class="page-header">
+        <h1>List</h1>
+        <p class="page-subtitle">
+          Dynamic list rendering using <code>:html</code> with sanitized output,
+          add/remove items, and filter state — all reactive.
+        </p>
+      </header>
+
+      <div class="card">
+        <!-- Add item -->
+        <div class="section">
+          <div class="section-title">Add task</div>
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap">
+            <input
+              id="new-task"
+              type="text"
+              placeholder="Task description..."
+              :model="ui.newText"
+              @keydown="ui.newText && $event.key === 'Enter' && (todos.items.push({ id: Date.now(), text: ui.newText, done: false, tag: ui.newTag }), ui.newText = '')"
+              style="
+                flex: 1;
+                min-width: 180px;
+                padding: 0.55rem 0.75rem;
+                border: 1px solid var(--border);
+                border-radius: var(--r-md);
+                background: var(--surface-2);
+                color: var(--text);
+                font-size: 0.9rem;
+                outline: none;
+              "
+            />
+            <select
+              :model="ui.newTag"
+              style="
+                padding: 0.55rem 0.75rem;
+                border: 1px solid var(--border);
+                border-radius: var(--r-md);
+                background: var(--surface-2);
+                color: var(--text);
+                font-size: 0.9rem;
+              "
+            >
+              <option value="work">Work</option>
+              <option value="personal">Personal</option>
+              <option value="urgent">Urgent</option>
+            </select>
+            <button
+              class="btn btn-primary"
+              :disabled="ui.newText.length < 2"
+              @click="todos.items.push({ id: Date.now(), text: ui.newText, done: false, tag: ui.newTag }); ui.newText = ''"
+            >
+              Add
+            </button>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="section">
+          <div class="output-box">
+            <div class="stat-row">
+              <span class="stat-label">total</span>
+              <span>{{ todos.items.length }}</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">done</span>
+              <span>{{ todos.items.filter(i => i.done).length }}</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">remaining</span>
+              <span>{{ todos.items.filter(i => !i.done).length }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="section">
+          <div class="section-title">Filter</div>
+          <div style="display: flex; gap: 0.4rem; flex-wrap: wrap">
+            <button
+              class="filter-btn"
+              :class="{ active: ui.filter === 'all' }"
+              @click="ui.filter = 'all'"
+            >
+              All
+            </button>
+            <button
+              class="filter-btn"
+              :class="{ active: ui.filter === 'active' }"
+              @click="ui.filter = 'active'"
+            >
+              Active
+            </button>
+            <button
+              class="filter-btn"
+              :class="{ active: ui.filter === 'done' }"
+              @click="ui.filter = 'done'"
+            >
+              Done
+            </button>
+            <button
+              class="filter-btn"
+              :class="{ active: ui.filter === 'urgent' }"
+              @click="ui.filter = 'urgent'"
+            >
+              Urgent
+            </button>
+          </div>
+        </div>
+
+        <!-- List rendered via :html -->
+        <div class="section">
+          <div class="section-title">
+            Tasks
+            <span
+              style="
+                font-size: 0.78rem;
+                color: var(--muted);
+                font-weight: 400;
+                margin-left: 0.5rem;
+              "
+            >
+              (rendered via <code>:html</code>)
+            </span>
+          </div>
+
+          <div
+            :show="todos.items.length === 0"
+            style="color: var(--muted); font-size: 0.9rem; padding: 0.5rem 0"
+          >
+            No tasks yet. Add one above.
+          </div>
+
+          <!-- :html renders the filtered list as sanitized HTML -->
+          <div
+            :html='todos.items
+            .filter(i => ui.filter === &apos;all&apos; ? true : ui.filter === &apos;done&apos; ? i.done : ui.filter === &apos;active&apos; ? !i.done : i.tag === ui.filter)
+            .map(i => `
+              &lt;div class="todo-item ${i.done ? &apos;done&apos; : &apos;&apos;}"&gt;
+                &lt;input type="checkbox" ${i.done ? &apos;checked&apos; : &apos;&apos;} data-id="${i.id}" class="todo-check" style="width:16px;height:16px;cursor:pointer" /&gt;
+                &lt;span class="todo-text"&gt;${i.text}&lt;/span&gt;
+                &lt;span class="todo-tag tag-${i.tag}"&gt;${i.tag}&lt;/span&gt;
+                &lt;button data-id="${i.id}" class="todo-del btn btn-danger" style="padding:.2rem .5rem;font-size:.75rem"&gt;✕&lt;/button&gt;
+              &lt;/div&gt;
+            `).join(&apos;&apos;)'
+          ></div>
+        </div>
+
+        <!-- Bulk actions -->
+        <div class="section">
+          <div class="btn-group">
+            <button
+              class="btn btn-secondary"
+              @click="todos.items.forEach(i => i.done = true)"
+            >
+              Mark all done
+            </button>
+            <button
+              class="btn btn-secondary"
+              @click="todos.items.forEach(i => i.done = false)"
+            >
+              Mark all active
+            </button>
+            <button
+              class="btn btn-danger"
+              @click="todos.items = todos.items.filter(i => !i.done)"
+            >
+              Clear done
+            </button>
+            <button class="btn btn-danger" @click="todos.items = []">
+              Clear all
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      const { reactive, mount, onClick, onChange } = Reactive;
+      const todos = reactive({
+        items: [
+          { id: 1, text: "Build the template parser", done: true, tag: "work" },
+          { id: 2, text: "Write examples", done: false, tag: "work" },
+          { id: 3, text: "Add :for directive", done: false, tag: "urgent" },
+          { id: 4, text: "Buy groceries", done: false, tag: "personal" },
+        ],
+      });
+      const ui = reactive({ filter: "all", newText: "", newTag: "work" });
+      mount({ todos, ui });
+
+      onClick(document, (e) => {
+        const del = e.target.closest(".todo-del");
+        if (del) {
+          const id = Number(del.dataset.id);
+          todos.items = todos.items.filter((i) => i.id !== id);
+        }
+      });
+      onChange(document, (e) => {
+        const cb = e.target.closest(".todo-check");
+        if (cb) {
+          const id = Number(cb.dataset.id);
+          const item = todos.items.find((i) => i.id === id);
+          if (item) item.done = cb.checked;
+        }
+      });
+    </script>
+  </body>
+</html>
