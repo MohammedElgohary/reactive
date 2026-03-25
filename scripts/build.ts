@@ -1,6 +1,6 @@
 /**
- * Unified build script — replaces all 8 vite.config.reactive.*.ts files
- * Run: node --experimental-strip-types scripts/build.ts
+ * Build script — produces all dist artifacts
+ * Run: npm run build
  */
 
 import { build, type InlineConfig } from "vite";
@@ -21,7 +21,7 @@ const terserOptions = {
     ],
     passes: 2,
   },
-  mangle: { properties: false },
+  mangle: { properties: false, keep_fnames: true },
   format: { comments: false },
 };
 
@@ -37,7 +37,7 @@ interface BuildVariant {
 }
 
 const variants: BuildVariant[] = [
-  // ESM — full, unminified + types
+  // ESM — full, unminified + types (main entry)
   {
     entry: "src/index.ts",
     fileName: "reactive.js",
@@ -47,7 +47,7 @@ const variants: BuildVariant[] = [
     emitDts: true,
     external: ["react", "react-dom"],
   },
-  // ESM — minified
+  // ESM — minified (./min export)
   {
     entry: "src/index.ts",
     fileName: "reactive.min.js",
@@ -57,16 +57,7 @@ const variants: BuildVariant[] = [
     emitDts: false,
     external: ["react", "react-dom"],
   },
-  // IIFE — unminified + types
-  {
-    entry: "src/index.vanilla.ts",
-    fileName: "reactive.iife.js",
-    format: "iife",
-    minify: false,
-    sourcemap: true,
-    emitDts: false,
-  },
-  // IIFE — minified (terser)
+  // IIFE — minified for browser (./browser and ./iife exports)
   {
     entry: "src/index.vanilla.ts",
     fileName: "reactive.iife.min.js",
@@ -75,7 +66,7 @@ const variants: BuildVariant[] = [
     sourcemap: false,
     emitDts: false,
   },
-  // Minimal ESM + types
+  // Minimal ESM + types (./minimal export)
   {
     entry: "src/index.minimal.ts",
     fileName: "reactive.minimal.js",
@@ -85,7 +76,7 @@ const variants: BuildVariant[] = [
     emitDts: true,
     dtsFileName: "reactive.minimal.d.ts",
   },
-  // Minimal IIFE
+  // Minimal IIFE for browser (./minimal/browser export)
   {
     entry: "src/index.minimal.ts",
     fileName: "reactive.minimal.iife.js",
@@ -165,6 +156,15 @@ async function buildAll() {
   for (const { file, size } of sizes) {
     console.log(`  ${file.padEnd(maxLen + 2)} ${size}`);
   }
+
+  // Keep examples/dist in sync so examples work when served from examples/
+  const { copyFile, mkdir: mkdirFs } = await import("fs/promises");
+  await mkdirFs(resolve(root, "examples/dist"), { recursive: true });
+  await copyFile(
+    resolve(root, "dist/reactive.iife.min.js"),
+    resolve(root, "examples/dist/reactive.iife.min.js"),
+  );
+  console.log("\n✓ Copied reactive.iife.min.js → examples/dist/\n");
 }
 
 buildAll().catch((e) => {

@@ -5,6 +5,8 @@
 import type { Reactive, Unsubscribe } from "../types";
 import { getActiveSubscriber } from "./dependency";
 import { scheduleNotification } from "./batch";
+import { markReactiveProxy } from "./registry";
+import { scheduleAutoMount } from "./parser";
 
 // Cache to avoid double-wrapping the same object
 const reactiveObjects = new WeakMap<object, object>();
@@ -485,9 +487,17 @@ function createReactivePrimitive<T>(initialValue: T): Reactive<T> {
 export function reactive<T>(
   initialValue: T,
 ): T extends object ? T : Reactive<T> {
-  if (initialValue === null)
-    return createReactivePrimitive(initialValue) as any;
-  if (typeof initialValue === "object")
-    return makeReactive(initialValue) as any;
-  return createReactivePrimitive(initialValue) as any;
+  let result: any;
+
+  if (initialValue === null) result = createReactivePrimitive(initialValue);
+  else if (typeof initialValue === "object")
+    result = makeReactive(initialValue);
+  else result = createReactivePrimitive(initialValue);
+
+  if (typeof initialValue === "object" && initialValue !== null) {
+    markReactiveProxy(result);
+    scheduleAutoMount();
+  }
+
+  return result;
 }

@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Template Parser · Reactive</title>
+    <link rel="stylesheet" href="../styles.css" />
+    <script src="../dist/reactive.iife.min.js"></script>
+    <style>
+      .example-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 1.5rem;
+      }
+      .ex-card {
+        display: flex;
+        flex-direction: column;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r-lg);
+        padding: 1.25rem;
+        text-decoration: none;
+        color: inherit;
+        transition:
+          border-color var(--t),
+          transform var(--t),
+          box-shadow var(--t);
+      }
+      .ex-card:hover {
+        border-color: var(--primary);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 32px rgba(99, 102, 241, 0.15);
+      }
+      .ex-icon {
+        font-size: 1.75rem;
+        margin-bottom: 0.75rem;
+        line-height: 1;
+      }
+      .ex-title {
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin-bottom: 0.35rem;
+      }
+      .ex-desc {
+        font-size: 0.82rem;
+        color: var(--muted);
+        flex: 1;
+        line-height: 1.5;
+      }
+      .ex-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        margin-top: 1rem;
+      }
+      .tag {
+        padding: 0.15rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        background: var(--surface-2);
+        color: var(--muted);
+        border: 1px solid var(--border);
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="topbar">
+      <a href="../index.html" class="topbar-brand">⚡ Reactive</a>
+      <div class="topbar-links">
+        <a href="index.html" class="active">Overview</a>
+        <a href="counter.html">Counter</a>
+        <a href="form.html">Form</a>
+        <a href="list.html">List</a>
+        <a href="scoped.html">Scoped</a>
+      </div>
+    </nav>
+
+    <main class="page">
+      <header class="page-header">
+        <h1>Template Parser</h1>
+        <p class="page-subtitle">
+          Write reactive UIs directly in HTML. Define state with
+          <code>reactive()</code> — the library auto-mounts on
+          <code>DOMContentLoaded</code>. Zero manual wiring.
+        </p>
+      </header>
+
+      <div class="card">
+        <div class="section">
+          <div class="section-title">Syntax reference</div>
+          <div class="output-box">
+            <div class="stat-row">
+              <span class="stat-label">Text</span
+              ><code>{{ counter.count }}</code>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Attribute</span
+              ><code>:disabled="counter.count === 0"</code>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Class</span
+              ><code>:class="{ active: state.on }"</code>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Style</span
+              ><code>:style="{ color: state.color }"</code>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Show/hide</span
+              ><code>:show="counter.count > 0"</code>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">HTML</span
+              ><code>:html="state.richContent"</code>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Two-way</span
+              ><code>:model="user.name"</code>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Event</span
+              ><code>@click="counter.count++"</code>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Live demo</div>
+          <div class="section-desc">
+            All of the below is wired by the parser — no <code>bindText</code>,
+            no <code>onClick</code>, no selectors.
+          </div>
+
+          <p style="margin-top: 1rem">
+            Count: <strong>{{ counter.count }}</strong> — {{ counter.count > 0 ?
+            "positive" : counter.count < 0 ? "negative" : "zero" }}
+          </p>
+
+          <div class="btn-group" style="margin-top: 0.75rem">
+            <button class="btn btn-primary" @click="counter.count++">+</button>
+            <button class="btn btn-secondary" @click="counter.count--">
+              −
+            </button>
+            <button class="btn btn-danger" @click="counter.count = 0">
+              Reset
+            </button>
+          </div>
+
+          <p
+            :show="counter.count > 9"
+            style="margin-top: 0.75rem; color: var(--warning)"
+          >
+            ⚠️ Count is getting large!
+          </p>
+        </div>
+      </div>
+
+      <div class="example-grid" style="margin-top: 1.5rem">
+        <a class="ex-card" href="counter.html">
+          <div class="ex-icon">🔢</div>
+          <div class="ex-title">Counter</div>
+          <div class="ex-desc">
+            Basic counter with expressions, conditionals, and class bindings.
+          </div>
+          <div class="ex-tags">
+            <span class="tag">{{ }}</span><span class="tag">:show</span
+            ><span class="tag">@click</span>
+          </div>
+        </a>
+        <a class="ex-card" href="form.html">
+          <div class="ex-icon">📝</div>
+          <div class="ex-title">Form</div>
+          <div class="ex-desc">
+            Two-way input binding, live preview, and validation feedback.
+          </div>
+          <div class="ex-tags">
+            <span class="tag">:model</span><span class="tag">:class</span
+            ><span class="tag">:show</span>
+          </div>
+        </a>
+        <a class="ex-card" href="list.html">
+          <div class="ex-icon">📋</div>
+          <div class="ex-title">List</div>
+          <div class="ex-desc">
+            Dynamic list rendering using :html with sanitized output.
+          </div>
+          <div class="ex-tags">
+            <span class="tag">:html</span><span class="tag">@click</span>
+          </div>
+        </a>
+        <a class="ex-card" href="scoped.html">
+          <div class="ex-icon">🎯</div>
+          <div class="ex-title">Scoped Updates</div>
+          <div class="ex-desc">
+            Two independent states — only affected nodes re-evaluate on change.
+          </div>
+          <div class="ex-tags">
+            <span class="tag">data-scope</span
+            ><span class="tag">performance</span>
+          </div>
+        </a>
+      </div>
+    </main>
+
+    <script src="../dist/reactive.iife.min.js"></script>
+    <script>
+      const { reactive, mount } = Reactive;
+      const counter = reactive({ count: 0 });
+      mount({ counter });
+    </script>
+  </body>
+</html>

@@ -32,21 +32,23 @@ import type {
  */
 export function bindAction<
   E extends HTMLElement = HTMLElement,
-  K extends keyof ElementEventMapType<E> = keyof ElementEventMapType<E>
+  K extends keyof ElementEventMapType<E> = keyof ElementEventMapType<E>,
 >(
-  selector: string | E,
+  selector: string | E | Document | Window,
   event: K,
   handler: (event: ElementEventMapType<E>[K]) => void,
-  options?: ActionOptions
+  options?: ActionOptions,
 ): () => void {
-  const element =
-    typeof selector === "string"
-      ? document.querySelector<E>(selector)
-      : selector;
+  let element: EventTarget | null;
 
-  if (!element) {
-    console.warn(`Element not found: ${selector}`);
-    return () => {};
+  if (typeof selector === "string") {
+    element = document.querySelector<E>(selector);
+    if (!element) {
+      console.warn(`Element not found: ${selector}`);
+      return () => {};
+    }
+  } else {
+    element = selector;
   }
 
   const wrappedHandler = (e: Event) => {
@@ -68,7 +70,7 @@ export function bindAction<
     element.removeEventListener(
       event as string,
       wrappedHandler,
-      listenerOptions
+      listenerOptions,
     );
   };
 }
@@ -81,7 +83,7 @@ export function bindAction<
 export function onClick<E extends HTMLElement = HTMLElement>(
   selector: string | E,
   handler: ActionHandler<MouseEvent>,
-  options?: ActionOptions
+  options?: ActionOptions,
 ): () => void {
   return bindAction(selector, "click" as any, handler as any, options);
 }
@@ -90,18 +92,18 @@ export function onClick<E extends HTMLElement = HTMLElement>(
 export function onDblClick<E extends HTMLElement = HTMLElement>(
   selector: string | E,
   handler: ActionHandler<MouseEvent>,
-  options?: ActionOptions
+  options?: ActionOptions,
 ): () => void {
   return bindAction(selector, "dblclick" as any, handler as any, options);
 }
 
 /** Bind input event (for input/textarea) */
 export function onInput<
-  E extends HTMLInputElement | HTMLTextAreaElement = HTMLInputElement
+  E extends HTMLInputElement | HTMLTextAreaElement = HTMLInputElement,
 >(
   selector: string | E,
   handler: ActionHandler<InputEvent>,
-  options?: ActionOptions
+  options?: ActionOptions,
 ): () => void {
   return bindAction(selector, "input" as any, handler as any, options);
 }
@@ -110,7 +112,7 @@ export function onInput<
 export function onChange<E extends HTMLElement = HTMLElement>(
   selector: string | E,
   handler: ActionHandler<Event>,
-  options?: ActionOptions
+  options?: ActionOptions,
 ): () => void {
   return bindAction(selector, "change" as any, handler as any, options);
 }
@@ -119,7 +121,7 @@ export function onChange<E extends HTMLElement = HTMLElement>(
 export function onSubmit(
   selector: string | HTMLFormElement,
   handler: ActionHandler<SubmitEvent>,
-  options?: ActionOptions
+  options?: ActionOptions,
 ): () => void {
   return bindAction(selector, "submit" as any, handler as any, {
     preventDefault: true,
@@ -131,7 +133,7 @@ export function onSubmit(
 export function onKeyDown<E extends HTMLElement = HTMLElement>(
   selector: string | E,
   handler: ActionHandler<KeyboardEvent>,
-  options?: ActionOptions
+  options?: ActionOptions,
 ): () => void {
   return bindAction(selector, "keydown" as any, handler as any, options);
 }
@@ -140,7 +142,7 @@ export function onKeyDown<E extends HTMLElement = HTMLElement>(
 export function onKeyUp<E extends HTMLElement = HTMLElement>(
   selector: string | E,
   handler: ActionHandler<KeyboardEvent>,
-  options?: ActionOptions
+  options?: ActionOptions,
 ): () => void {
   return bindAction(selector, "keyup" as any, handler as any, options);
 }
@@ -149,7 +151,7 @@ export function onKeyUp<E extends HTMLElement = HTMLElement>(
 export function onFocus<E extends HTMLElement = HTMLElement>(
   selector: string | E,
   handler: ActionHandler<FocusEvent>,
-  options?: ActionOptions
+  options?: ActionOptions,
 ): () => void {
   return bindAction(selector, "focus" as any, handler as any, options);
 }
@@ -158,7 +160,7 @@ export function onFocus<E extends HTMLElement = HTMLElement>(
 export function onBlur<E extends HTMLElement = HTMLElement>(
   selector: string | E,
   handler: ActionHandler<FocusEvent>,
-  options?: ActionOptions
+  options?: ActionOptions,
 ): () => void {
   return bindAction(selector, "blur" as any, handler as any, options);
 }
@@ -167,7 +169,7 @@ export function onBlur<E extends HTMLElement = HTMLElement>(
 export function onMouseEnter<E extends HTMLElement = HTMLElement>(
   selector: string | E,
   handler: ActionHandler<MouseEvent>,
-  options?: ActionOptions
+  options?: ActionOptions,
 ): () => void {
   return bindAction(selector, "mouseenter" as any, handler as any, options);
 }
@@ -176,7 +178,7 @@ export function onMouseEnter<E extends HTMLElement = HTMLElement>(
 export function onMouseLeave<E extends HTMLElement = HTMLElement>(
   selector: string | E,
   handler: ActionHandler<MouseEvent>,
-  options?: ActionOptions
+  options?: ActionOptions,
 ): () => void {
   return bindAction(selector, "mouseleave" as any, handler as any, options);
 }
@@ -185,7 +187,7 @@ export function onMouseLeave<E extends HTMLElement = HTMLElement>(
 export function onScroll<E extends HTMLElement = HTMLElement>(
   selector: string | E,
   handler: ActionHandler<Event>,
-  options?: ActionOptions
+  options?: ActionOptions,
 ): () => void {
   return bindAction(selector, "scroll" as any, handler as any, {
     passive: true,
@@ -211,7 +213,7 @@ export function onKey<E extends HTMLElement = HTMLElement>(
   selector: string | E,
   key: KeyFilter,
   handler: ActionHandler<KeyboardEvent>,
-  options?: ActionOptions
+  options?: ActionOptions,
 ): () => void {
   const keyHandler = (e: KeyboardEvent) => {
     let shouldHandle = false;
@@ -236,7 +238,7 @@ export function onKey<E extends HTMLElement = HTMLElement>(
 export function onEnter<E extends HTMLElement = HTMLElement>(
   selector: string | E,
   handler: ActionHandler<KeyboardEvent>,
-  options?: ActionOptions
+  options?: ActionOptions,
 ): () => void {
   return onKey(selector, "Enter", handler, options);
 }
@@ -245,7 +247,7 @@ export function onEnter<E extends HTMLElement = HTMLElement>(
 export function onEscape<E extends HTMLElement = HTMLElement>(
   selector: string | E,
   handler: ActionHandler<KeyboardEvent>,
-  options?: ActionOptions
+  options?: ActionOptions,
 ): () => void {
   return onKey(selector, "Escape", handler, options);
 }

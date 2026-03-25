@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Parser · Counter · Reactive</title>
+    <link rel="stylesheet" href="../styles.css" />
+    <script src="../dist/reactive.iife.min.js"></script>
+  </head>
+  <body>
+    <nav class="topbar">
+      <a href="../index.html" class="topbar-brand">⚡ Reactive</a>
+      <div class="topbar-links">
+        <a href="index.html">Overview</a>
+        <a href="counter.html" class="active">Counter</a>
+        <a href="form.html">Form</a>
+        <a href="list.html">List</a>
+        <a href="scoped.html">Scoped</a>
+      </div>
+    </nav>
+
+    <main class="page">
+      <header class="page-header">
+        <h1>Counter</h1>
+        <p class="page-subtitle">
+          Text interpolation, expressions, conditionals, and class bindings —
+          all declared in HTML. Zero JS wiring.
+        </p>
+      </header>
+
+      <div class="card">
+        <!-- Display -->
+        <div class="section">
+          <div class="section-title">Count</div>
+
+          <div class="output-box" style="text-align: center; padding: 2rem">
+            <div
+              style="font-size: 3.5rem; font-weight: 800; line-height: 1"
+              :style="{ color: counter.count > 0 ? 'var(--success)' : counter.count < 0 ? 'var(--danger)' : 'inherit' }"
+            >
+              {{ counter.count }}
+            </div>
+            <div
+              style="margin-top: 0.5rem; color: var(--muted); font-size: 0.9rem"
+            >
+              {{ counter.count > 0 ? '▲ positive' : counter.count < 0 ? '▼
+              negative' : '● zero' }}
+            </div>
+            <div
+              style="
+                margin-top: 0.25rem;
+                color: var(--muted);
+                font-size: 0.85rem;
+              "
+            >
+              doubled: {{ counter.count * 2 }} &nbsp;|&nbsp; squared: {{
+              counter.count * counter.count }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="section">
+          <div class="section-title">Controls</div>
+          <div class="btn-group">
+            <button class="btn btn-primary" @click="counter.count++">
+              + Increment
+            </button>
+            <button class="btn btn-secondary" @click="counter.count--">
+              − Decrement
+            </button>
+            <button class="btn btn-secondary" @click="counter.count += 10">
+              +10
+            </button>
+            <button class="btn btn-danger" @click="counter.count = 0">
+              Reset
+            </button>
+          </div>
+        </div>
+
+        <!-- Conditional messages -->
+        <div class="section">
+          <div class="section-title">Conditional messages</div>
+          <p :show="counter.count === 0" style="color: var(--muted)">
+            Count is zero. Press + to start.
+          </p>
+          <p :show="counter.count > 0" style="color: var(--success)">
+            ✓ Count is positive ({{ counter.count }})
+          </p>
+          <p :show="counter.count < 0" style="color: var(--danger)">
+            ✗ Count is negative ({{ counter.count }})
+          </p>
+          <p :show="counter.count > 99" style="color: var(--warning)">
+            ⚠️ Over 99!
+          </p>
+        </div>
+
+        <!-- Dynamic class -->
+        <div class="section">
+          <div class="section-title">Dynamic class &amp; style</div>
+          <div
+            :class="{ badge: true, 'badge-success': counter.count > 0, 'badge-danger': counter.count < 0 }"
+            :style="{ opacity: counter.count === 0 ? '0.4' : '1' }"
+            style="
+              display: inline-block;
+              padding: 0.4rem 1rem;
+              border-radius: 999px;
+              border: 1px solid var(--border);
+            "
+          >
+            {{ counter.count > 0 ? 'Positive' : counter.count < 0 ? 'Negative' :
+            'Zero' }}
+          </div>
+        </div>
+
+        <!-- Attribute binding -->
+        <div class="section">
+          <div class="section-title">Attribute binding</div>
+          <div class="btn-group">
+            <button
+              class="btn btn-primary"
+              :disabled="counter.count >= 20"
+              @click="counter.count++"
+            >
+              + (disabled at 20, now: {{ counter.count }})
+            </button>
+            <button
+              class="btn btn-secondary"
+              :disabled="counter.count <= -20"
+              @click="counter.count--"
+            >
+              − (disabled at −20)
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      const { reactive, mount } = Reactive;
+      const counter = reactive({ count: 0 });
+      mount({ counter });
+    </script>
+  </body>
+</html>

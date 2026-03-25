@@ -1,121 +1,61 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+## [1.0.3] - Unreleased
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+### Added
+
+- `onClick`, `onChange`, `bindAction` now accept `Document` and `Window` as targets for event delegation
+- Library auto-injects `body { opacity: 0 }` + `body.r-ready { opacity: 1 }` on load — prevents flash of unresolved `{{ }}` expressions without any manual CSS
+
+### Changed
+
+- `mount()` is now the required entry point for the template parser — explicit and reliable
+- Removed `inferCallerName()` — stack-trace variable name inference never worked in browsers
+- Removed `getState()` internal function — use `buildScope()` instead
+- Removed `scheduleAutoMount` from public exports — internal implementation detail
+- Removed `getRegisteredState` export alias — was a duplicate of the removed `getState`
+- Removed `scheduleNotification` from public exports — internal batch detail
+- Cleaned unused imports in `reactive.ts`
+
+### Fixed
+
+- Template parser flash of unresolved expressions — body is now hidden by injected CSS until `mount()` completes
+- `scheduleAutoMount` timing race — deferred auto-mount no longer overrides an explicit `mount()` call
+- `discoverWindowStates` guard — now runs before the registry length check so zero-config auto-mount works correctly
+
+---
+
+## [1.0.2] - 2024
+
+### Added
+
+- Template parser (`mount`, `parse`, `autoMount`, `unmount`)
+- `{{ expr }}` text interpolation
+- `:attr`, `:class`, `:style`, `:show`, `:html`, `:model` directives
+- `@event` handlers with `$event` access
+  bind multiple CSS properties at once
+- `computedAsync()` — async derived values with loading/error state
+- `watchMultiple()`, `watchProperty()` — fine-grained observation
+- `shallowReactive()`, `readonly()`, `readonlyObject()`
+- Debug utilities: `setDebug`, `trackReactive`, `getDebugInfo`, `logTrackedReactive`
+- Security: `escapeHtmlEntities`, `sanitizeHtmlContent`, `isUrlSafe`, `configureReactiveSecurity`
+- Unified `bind()` — auto-detects binding type
+  ring
+
+---
 
 ## [1.0.0] - 2024-01-17
 
 ### Added
 
-- ✨ Core reactivity system with `reactive()`, `computed()`, `computedAsync()`, and `effect()`
-- ✨ DOM binding functions (`bindText`, `bindHTML`, `bindAttr`, `bindClass`, `bindStyle`, `bindStyles`, `bind`)
-- ✨ Two-way input binding (`bindInput`) — supports text, checkbox, radio, select, textarea, file, date
-- ✨ Event handling utilities (`onClick`, `onInput`, `onSubmit`, `onKey`, `onEnter`, `onEscape`, etc.)
-- ✨ Watch API (`watch`, `watchMultiple`, `watchProperty`) for observing reactive values
-- ✨ Batch updates for performance optimization
-- ✨ Built-in XSS protection with HTML sanitization
-- ✨ URL validation to prevent JavaScript injection
-- ✨ Dangerous attribute/property blocking
-- ✨ TypeScript support with full type definitions
-- ✨ Multiple build formats (ESM, IIFE, minified, minimal)
-- ✨ Debug utilities for development (`trackReactive`, `getDebugInfo`, `logTrackedReactive`)
-- ✨ Readonly reactive values (`readonly`, `readonlyObject`)
-- ✨ Utility functions (`ref`, `toRaw`, `markRaw`, `isRaw`, `shallowReactive`, `isReactive`, `isComputed`)
-- ✨ Comprehensive test suite (427+ tests)
-- ✨ Complete API documentation
-- ✨ Security documentation
-- ✨ CI/CD pipeline with GitHub Actions
-
-### Security
-
-- 🔒 Automatic HTML sanitization by default
-- 🔒 Script tag removal
-- 🔒 Event handler attribute blocking
-- 🔒 JavaScript URL validation
-- 🔒 Safe HTML entity escaping
-- 🔒 Configurable security settings via `configureReactiveSecurity()`
-
-### Performance
-
-- ⚡ Lazy computed value evaluation
-- ⚡ Computed value caching
-- ⚡ Batch update optimization
-- ⚡ Efficient dependency tracking
-- ⚡ Race-condition-safe async computed
-- ⚡ Minimal bundle size (~5KB minified + gzipped for core)
-
-### Developer Experience
-
-- 📝 Full TypeScript support
-- 📝 Comprehensive documentation
-- 📝 Rich examples
-- 📝 Debug mode for development
-- 📝 Clear error messages
-- 📝 IDE autocomplete support
-
-## [Unreleased]
-
-### Planned Features
-
-- Persistence (localStorage integration)
-- Undo/Redo functionality
-- DevTools integration
-- Performance monitoring API
+- Core reactivity: `reactive`, `computed`, `effect`, `batch`, `watch`
+- DOM bindings: `bindText`, `bindHTML`, `bindAttr`, `bindClass`, `bindStyle`, `bindInput`, `bindProp`, `bindMultiple`
+- Event helpers: `onClick`, `onInput`, `onSubmit`, `onKey`, `onEnter`, `onEscape`, and more
+- TypeScript support with full type definitions
+- Multiple build formats: ESM, IIFE, minified, minimal
+- XSS protection with automatic HTML sanitization
+- 527+ tests
 
 ---
 
-## Version History
-
-### Version 1.0.0 (Initial Release)
-
-First stable release of Reactive with core features, security, and comprehensive documentation.
-
-**Key Features:**
-
-- Core reactivity system (reactive, computed, computedAsync, effect, watch, batch)
-- DOM bindings (text, HTML, input, class, style, attr, prop, render)
-- Security features (sanitization, URL validation, attribute blocking)
-- TypeScript support
-- 427+ tests
-- Documentation
-
-**Bundle Sizes (approximate):**
-
-| Build                      | Size (minified) |
-| -------------------------- | --------------- |
-| `reactive.min.js` (ESM)    | ~13KB           |
-| `reactive.iife.min.js`     | ~14KB           |
-| `reactive.minimal.js`      | ~5KB            |
-| `reactive.minimal.iife.js` | ~5KB            |
-
-**Browser Support:**
-
-- Chrome/Edge: Latest 2 versions
-- Firefox: Latest 2 versions
-- Safari: Latest 2 versions
-- Modern browsers with ES6+ support
-
-**Node.js Support:**
-
-- Node.js 18.x or higher
-- NPM 7.x or higher
-
----
-
-## Migration Guides
-
-### From 0.x to 1.0.0
-
-This is the initial stable release. No migration needed.
-
----
-
-## Contributing
-
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines on how to contribute to this project.
-
-## License
-
-MIT License - see [LICENSE](./LICENSE) for details.
+MIT
